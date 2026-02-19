@@ -42,14 +42,8 @@ public class DBConnect {
         }
     }
 
-    public static DBConnect getInstance() {
-        if (DBConnect.instance == null)
-            try {
-                DBConnect.instance = new DBConnect();
-            } catch (Exception ex) {
-                System.out.println("[Error connecting to DB]\n" + ex);
-            }
-
+    public static DBConnect getInstance() throws Exception {
+        DBConnect.instance = new DBConnect();
         return DBConnect.instance;
     }
 

@@ -7,7 +7,7 @@ import com.swe.core.utils.database.DBConnect;
 abstract public class Table  {
     public Connection conn;
 
-    public Table() {
+    public Table() throws Exception {
         this.conn = DBConnect.getInstance().conn;
     }
 

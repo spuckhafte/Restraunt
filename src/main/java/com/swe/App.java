@@ -1,11 +1,14 @@
 package com.swe;
 
-import com.swe.core.utils.env.EnVars;
-import com.swe.core.utils.env.MyEnv;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+import com.swe.core.ui.RestaurantUI;
 
 public class App {
     public static void main( String[] args ) throws Exception {
-        System.out.println( "Hello World!" );
-        System.out.println(MyEnv.getVariable(EnVars.DB_NAME));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        RestaurantUI ui = new RestaurantUI(reader);
+        ui.run();
     }
 }

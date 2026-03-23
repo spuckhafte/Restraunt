@@ -6,17 +6,15 @@ public class MenuItem {
     String code;
     String name;
     double basePrice;
-    TaxGroup taxGroup;
     boolean active;
     Instant lastUpdate;
 
-    public MenuItem(String code, String name, double basePrice, TaxGroup taxGroup) {
+    public MenuItem(String code, String name, double basePrice) {
         if (basePrice < 0)
             throw new IllegalArgumentException("Base price cannot be negative");
         this.code = code;
         this.name = name;
         this.basePrice = basePrice;
-        this.taxGroup = taxGroup;
         this.active = true;
         this.lastUpdate = Instant.now();
     }
@@ -39,10 +37,6 @@ public class MenuItem {
 
     public double getBasePrice() {
         return this.basePrice;
-    }
-
-    public TaxGroup getTaxGroup() {
-        return this.taxGroup;
     }
 
     public boolean isActive() {

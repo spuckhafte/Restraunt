@@ -9,7 +9,7 @@ import com.swe.core.utils.env.MyEnv;
 
 public class DBConnect {
     private static DBConnect instance;
-    public Connection conn;
+    public final Connection conn;
 
     @SuppressWarnings("UseSpecificCatch")
     private DBConnect() throws Exception {
@@ -42,8 +42,9 @@ public class DBConnect {
         }
     }
 
-    public static DBConnect getInstance() throws Exception {
-        DBConnect.instance = new DBConnect();
+    public static synchronized DBConnect getInstance() throws Exception {
+        if (DBConnect.instance == null)
+            DBConnect.instance = new DBConnect();
         return DBConnect.instance;
     }
 

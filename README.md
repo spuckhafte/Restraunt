@@ -84,5 +84,4 @@ The backend auto-creates these tables on startup:
 	- `http://localhost:8080`
 
 ### Frontend
-
-_TBD_
+*tbd*

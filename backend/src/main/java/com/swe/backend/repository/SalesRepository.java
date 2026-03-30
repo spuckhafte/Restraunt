@@ -18,6 +18,8 @@ import com.swe.backend.model.SaleLineDto;
 
 @Repository
 public class SalesRepository extends DbSupport {
+    
+    // Insert bill + lines in one transaction
     public long createBill(double subtotal, List<SaleLineDto> lines) {
         Connection conn = connection();
         try {
@@ -66,6 +68,7 @@ public class SalesRepository extends DbSupport {
         }
     }
 
+    // Marks bill as voided if not already
     public boolean voidBill(long billId) {
         String sql = "UPDATE bills SET voided = TRUE WHERE id = ? AND voided = FALSE";
         try (PreparedStatement ps = connection().prepareStatement(sql)) {

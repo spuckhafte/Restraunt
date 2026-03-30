@@ -23,6 +23,7 @@ public class SalesService {
         this.salesRepository = salesRepository;
     }
 
+    // Validates entries, calculates totals, saves bill
     public BillDto processSale(List<SaleEntryRequest> entries) {
         if (entries == null || entries.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No sale entries provided");
@@ -54,6 +55,7 @@ public class SalesService {
             .orElseThrow(() -> new IllegalStateException("Bill was not created"));
     }
 
+    // Voids bill by ID; throws 404 if not found
     public BillDto voidSale(long billId) {
         boolean voided = salesRepository.voidBill(billId);
         if (!voided) {

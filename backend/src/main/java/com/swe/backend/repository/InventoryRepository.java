@@ -58,7 +58,8 @@ public class InventoryRepository extends DbSupport {
             throw new IllegalStateException("Failed to create inventory item", ex);
         }
     }
-
+    
+    // Adds quantity to stock for a given item 
     public InventoryItemDto receive(String code, double quantity) {
         String updateSql = "UPDATE inventory_items SET quantity_on_hand = quantity_on_hand + ? WHERE code = ?";
         try (PreparedStatement ps = connection().prepareStatement(updateSql)) {
@@ -73,6 +74,7 @@ public class InventoryRepository extends DbSupport {
         }
     }
 
+    // Deducts stock; flags if above rolling avg
     public IssueResultDto issue(String code, double quantity) {
         Connection conn = connection();
         try {
@@ -129,6 +131,7 @@ public class InventoryRepository extends DbSupport {
         }
     }
 
+    // Avg of last 3 issues to detect anomalies
     private double averageUsageFromLastThree(String code) throws SQLException {
         String sql = "SELECT COALESCE(AVG(quantity), 0) AS avg_qty FROM (SELECT quantity FROM inventory_usage WHERE item_code = ? ORDER BY used_at DESC LIMIT 3) recent";
         try (PreparedStatement ps = connection().prepareStatement(sql)) {

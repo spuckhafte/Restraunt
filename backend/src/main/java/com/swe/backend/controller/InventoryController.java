@@ -11,12 +11,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.swe.backend.auth.AuthRequestContext;
+import com.swe.backend.auth.SessionPrincipal;
 import com.swe.backend.model.InventoryItemDto;
 import com.swe.backend.model.IssueResultDto;
+import com.swe.backend.model.SupplierInvoiceDto;
 import com.swe.backend.model.request.CreateInventoryItemRequest;
+import com.swe.backend.model.request.CreateSupplierInvoiceRequest;
 import com.swe.backend.model.request.QuantityRequest;
 import com.swe.backend.service.InventoryService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -53,5 +58,30 @@ public class InventoryController {
     @PostMapping("/{code}/issue")
     public IssueResultDto issue(@PathVariable String code, @Valid @RequestBody QuantityRequest request) {
         return inventoryService.issue(code, request.quantity());
+    }
+
+    @GetMapping("/invoices")
+    public List<SupplierInvoiceDto> listInvoices() {
+        return inventoryService.listInvoices();
+    }
+
+    @PostMapping("/invoices")
+    @ResponseStatus(HttpStatus.CREATED)
+    public SupplierInvoiceDto createInvoice(
+        @Valid @RequestBody CreateSupplierInvoiceRequest request,
+        HttpServletRequest servletRequest
+    ) {
+        SessionPrincipal principal = (SessionPrincipal) servletRequest.getAttribute(AuthRequestContext.ATTR_PRINCIPAL);
+        long createdByUserId = principal == null ? 0L : principal.userId();
+
+        return inventoryService.createInvoice(
+            request.supplierName().trim(),
+            request.itemCode().trim(),
+            request.quantity(),
+            request.unitPrice(),
+            request.invoiceDate(),
+            request.approved(),
+            createdByUserId
+        );
     }
 }

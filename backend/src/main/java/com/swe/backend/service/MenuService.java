@@ -22,12 +22,14 @@ public class MenuService {
         return menuRepository.findActive();
     }
 
+    // Inserts new menu item; returns saved record
     public MenuItemDto add(MenuItemDto item) {
         menuRepository.insert(item);
         return menuRepository.findActiveByCode(item.code())
             .orElseThrow(() -> new IllegalStateException("Menu item was not created"));
     }
 
+    // Updates price; throws 404 if item inactive
     public MenuItemDto updatePrice(String code, double newPrice) {
         boolean updated = menuRepository.updatePrice(code, newPrice);
         if (!updated) {
@@ -38,6 +40,7 @@ public class MenuService {
             .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Active item not found"));
     }
 
+    // Soft-deletes item; throws 404 if not found
     public void delete(String code) {
         boolean deleted = menuRepository.deactivate(code);
         if (!deleted) {

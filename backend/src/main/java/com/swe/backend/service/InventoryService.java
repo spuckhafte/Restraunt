@@ -29,6 +29,7 @@ public class InventoryService {
             .orElseThrow(() -> new IllegalStateException("Inventory item was not created"));
     }
 
+    // Delegates stock increase to repository
     public InventoryItemDto receive(String code, double quantity) {
         try {
             return inventoryRepository.receive(code, quantity);
@@ -37,6 +38,7 @@ public class InventoryService {
         }
     }
 
+    // Delegates stock deduction; returns flag result
     public IssueResultDto issue(String code, double quantity) {
         try {
             return inventoryRepository.issue(code, quantity);

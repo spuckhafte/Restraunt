@@ -13,6 +13,8 @@ import com.swe.backend.model.MenuItemDto;
 
 @Repository
 public class MenuRepository extends DbSupport {
+    
+    // Returns all active menu items
     public List<MenuItemDto> findActive() {
         String sql = "SELECT code, name, base_price, active FROM menu_items WHERE active = TRUE ORDER BY code";
         List<MenuItemDto> items = new ArrayList<>();
@@ -55,6 +57,7 @@ public class MenuRepository extends DbSupport {
         }
     }
 
+    // Updates base price for an active item
     public boolean updatePrice(String code, double newPrice) {
         String sql = "UPDATE menu_items SET base_price = ? WHERE code = ? AND active = TRUE";
         try (PreparedStatement ps = connection().prepareStatement(sql)) {
@@ -66,6 +69,7 @@ public class MenuRepository extends DbSupport {
         }
     }
 
+    // Soft-deletes an item by setting active=false
     public boolean deactivate(String code) {
         String sql = "UPDATE menu_items SET active = FALSE WHERE code = ? AND active = TRUE";
         try (PreparedStatement ps = connection().prepareStatement(sql)) {

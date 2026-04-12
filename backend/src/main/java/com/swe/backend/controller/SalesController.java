@@ -25,10 +25,13 @@ public class SalesController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+
+    // POST /api/sales: creates a new bill
     public BillDto processSale(@Valid @RequestBody CreateSaleRequest request) {
         return salesService.processSale(request.entries());
     }
 
+    // POST /api/sales/{id}/void — cancels a bill
     @PostMapping("/{billId}/void")
     public BillDto voidSale(@PathVariable long billId) {
         return salesService.voidSale(billId);

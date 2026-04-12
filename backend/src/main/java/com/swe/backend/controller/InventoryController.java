@@ -40,6 +40,8 @@ public class InventoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+
+    // POST /api/inventory: registers new item
     public InventoryItemDto addItem(@Valid @RequestBody CreateInventoryItemRequest request) {
         return inventoryService.add(new InventoryItemDto(
             request.code().trim(),
@@ -50,11 +52,13 @@ public class InventoryController {
         ));
     }
 
+    // POST /{code}/receive: adds stock quantity   
     @PostMapping("/{code}/receive")
     public InventoryItemDto receive(@PathVariable String code, @Valid @RequestBody QuantityRequest request) {
         return inventoryService.receive(code, request.quantity());
     }
 
+    // POST /{code}/issue: deducts stock quantity
     @PostMapping("/{code}/issue")
     public IssueResultDto issue(@PathVariable String code, @Valid @RequestBody QuantityRequest request) {
         return inventoryService.issue(code, request.quantity());

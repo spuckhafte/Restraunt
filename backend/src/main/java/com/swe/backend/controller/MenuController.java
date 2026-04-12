@@ -37,6 +37,8 @@ public class MenuController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+
+    // POST /api/menu: adds a new menu item
     public MenuItemDto addItem(@Valid @RequestBody CreateMenuItemRequest request) {
         return menuService.add(new MenuItemDto(
             request.code().trim(),
@@ -47,11 +49,13 @@ public class MenuController {
     }
 
     @PutMapping("/{code}/price")
+    // PUT /{code}/price: updates item price
     public MenuItemDto updatePrice(@PathVariable String code, @Valid @RequestBody UpdatePriceRequest request) {
         return menuService.updatePrice(code, request.newPrice());
     }
 
     @DeleteMapping("/{code}")
+    // DELETE /{code}: soft-deletes a menu item
     public SimpleMessage deleteItem(@PathVariable String code) {
         menuService.delete(code);
         return new SimpleMessage("Item deactivated");

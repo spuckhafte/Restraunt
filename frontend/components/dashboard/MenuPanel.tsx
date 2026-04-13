@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MenuApi, MenuItemDto } from "@/lib/api";
+import { ApiError, MenuApi, MenuItemDto } from "@/lib/api";
 
 export default function MenuPanel({ readOnly = false }: { readOnly?: boolean }) {
   const [items, setItems] = useState<MenuItemDto[]>([]);
@@ -19,8 +19,12 @@ export default function MenuPanel({ readOnly = false }: { readOnly?: boolean }) 
       const data = await MenuApi.getMenu();
       setItems(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to load menu");
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError("Failed to load menu");
+      }
     } finally {
       setLoading(false);
     }
@@ -39,8 +43,12 @@ export default function MenuPanel({ readOnly = false }: { readOnly?: boolean }) 
       setName("");
       setPrice("");
       loadMenu();
-    } catch (err: any) {
-      setError(err.message || "Failed to add item");
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError("Failed to add item");
+      }
     }
   };
 
@@ -49,8 +57,12 @@ export default function MenuPanel({ readOnly = false }: { readOnly?: boolean }) 
     try {
       await MenuApi.deleteItem(code);
       loadMenu();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete item");
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError("Failed to delete item");
+      }
     }
   };
 
@@ -64,8 +76,12 @@ export default function MenuPanel({ readOnly = false }: { readOnly?: boolean }) 
     try {
       await MenuApi.updatePrice(code, newPrice);
       loadMenu();
-    } catch (err: any) {
-      setError(err.message || "Failed to update price");
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError("Failed to update price");
+      }
     }
   };
 

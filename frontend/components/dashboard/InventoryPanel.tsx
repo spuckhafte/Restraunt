@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { InventoryApi, InventoryItemDto } from "@/lib/api";
+import { ApiError, InventoryApi, InventoryItemDto } from "@/lib/api";
 
 export default function InventoryPanel({ readOnly = false }: { readOnly?: boolean }) {
   const [items, setItems] = useState<InventoryItemDto[]>([]);
@@ -20,8 +20,12 @@ export default function InventoryPanel({ readOnly = false }: { readOnly?: boolea
       const data = await InventoryApi.list();
       setItems(data);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to load inventory");
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError("Failed to load inventory");
+      }
     } finally {
       setLoading(false);
     }
@@ -46,8 +50,12 @@ export default function InventoryPanel({ readOnly = false }: { readOnly?: boolea
       setUnit("");
       setQuantity("");
       loadInventory();
-    } catch (err: any) {
-      setError(err.message || "Failed to add inventory item");
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError("Failed to add inventory item");
+      }
     }
   };
 
@@ -65,8 +73,12 @@ export default function InventoryPanel({ readOnly = false }: { readOnly?: boolea
         await InventoryApi.issue(itemCode, qty);
       }
       loadInventory();
-    } catch (err: any) {
-      setError(err.message || `Failed to ${actionName} item`);
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError(`Failed to ${actionName} item`);
+      }
     }
   };
 

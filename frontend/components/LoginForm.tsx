@@ -22,7 +22,7 @@ export default function LoginForm({ scrollYProgress, onSuccess }: LoginFormProps
   const [isHovered, setIsHovered] = useState(false);
 
   const opacity = useTransform(scrollYProgress, [0.95, 1], [0, 1]);
-  const pointerEvents = useTransform(scrollYProgress, (v) => (v > 0.98 ? "auto" : "none"));
+  const pointerEvents = useTransform(scrollYProgress, [0.98, 1], ["none", "auto"]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +48,7 @@ export default function LoginForm({ scrollYProgress, onSuccess }: LoginFormProps
       className="fixed inset-0 z-[999] flex items-center justify-center p-4"
       style={{
         opacity,
-        pointerEvents: pointerEvents as any,
+        pointerEvents,
       }}
     >
       <div className="relative w-full max-w-md">

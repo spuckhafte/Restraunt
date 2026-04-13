@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MenuApi, MenuItemDto, SalesApi, SaleEntryRequest, BillDto } from "@/lib/api";
+import { ApiError, MenuApi, MenuItemDto, SalesApi, SaleEntryRequest, BillDto } from "@/lib/api";
 
 interface CartItem {
   menuItem: MenuItemDto;
@@ -23,8 +23,12 @@ export default function POSPanel() {
       // Only active items for POS
       setMenu(data.filter(item => item.active));
       setError(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to load menu");
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError("Failed to load menu");
+      }
     } finally {
       setLoading(false);
     }
@@ -75,8 +79,12 @@ export default function POSPanel() {
       setLastBill(bill);
       setCart([]);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || "Failed to process sale");
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError("Failed to process sale");
+      }
     } finally {
       setProcessing(false);
     }
@@ -89,9 +97,13 @@ export default function POSPanel() {
       if (lastBill?.id === billId) {
         setLastBill({ ...lastBill, voided: true });
       }
-      alert(`Bill #${billId} successfully voided.`);
-    } catch (err: any) {
-      setError(err.message || "Failed to void bill");
+      setError(null);
+    } catch (unknownError) {
+      if (unknownError instanceof ApiError) {
+        setError(unknownError.message);
+      } else {
+        setError("Failed to void bill");
+      }
     } finally {
       setProcessing(false);
     }
@@ -201,6 +213,13 @@ export default function POSPanel() {
               {lastBill.voided && <span className="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded font-mono">VOIDED</span>}
             </div>
             <div className="text-white font-mono text-sm">${lastBill.subtotal.toFixed(2)}</div>
+            <div className="mt-2 text-xs text-white/65 space-y-1">
+              {lastBill.lines.map((line) => (
+                <p key={`${line.itemCode}-${line.itemName}`}>
+                  {line.itemName} x{line.quantity} = ${line.lineTotal.toFixed(2)}
+                </p>
+              ))}
+            </div>
             {!lastBill.voided && (
               <button 
                 onClick={() => handleVoid(lastBill.id)}

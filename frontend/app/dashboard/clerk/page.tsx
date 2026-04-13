@@ -7,8 +7,8 @@ export default function ClerkDashboard() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-light text-white tracking-widest uppercase mb-2">Service <span className="font-bold text-cyan-400">Clerk</span></h1>
-        <p className="text-white/40 font-mono text-sm">Access Level: Standard // Sector: Point of Sale</p>
+        <h1 className="text-3xl font-light text-white tracking-widest uppercase mb-2">Sales <span className="font-bold text-cyan-300">Workspace</span></h1>
+        <p className="text-white/50 text-sm">UC-02 point-of-sale billing and void management.</p>
       </header>
 
       <POSPanel />

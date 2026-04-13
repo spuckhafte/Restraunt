@@ -1,46 +1,186 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { usePathname, useRouter } from "next/navigation";
+import { ApiError, AuthApi } from "@/lib/api";
+import {
+  clearSession,
+  getSession,
+  normalizeRole,
+  onSessionChange,
+  roleToDashboardPath,
+  setSession,
+  type SessionState,
+} from "@/lib/session";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen bg-black/50 backdrop-blur-md text-white relative font-sans w-full">
-      {/* Dynamic background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-cyan-900/20 via-black/40 to-fuchsia-900/20 pointer-events-none z-0"></div>
-      
-      {/* Decorative cyber grid */}
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none z-0"></div>
+  const router = useRouter();
+  const pathname = usePathname();
 
-      {/* Main Content Area */}
+  const [session, setSessionState] = useState<SessionState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const validateSession = async () => {
+      const localSession = getSession();
+      if (!localSession) {
+        router.replace("/login");
+        if (isMounted) {
+          setSessionState(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setSessionState(localSession);
+      }
+
+      try {
+        const me = await AuthApi.me();
+        const effectiveRole = normalizeRole(me.role);
+        if (
+          me.id !== localSession.userId ||
+          me.username !== localSession.username ||
+          effectiveRole !== localSession.effectiveRole
+        ) {
+          setSession({
+            token: localSession.token,
+            userId: me.id,
+            username: me.username,
+            baseRole: localSession.baseRole,
+            effectiveRole,
+          });
+        }
+      } catch (unknownError) {
+        if (unknownError instanceof ApiError && unknownError.status === 401) {
+          clearSession();
+          router.replace("/login");
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    validateSession();
+
+    const unsubscribe = onSessionChange(() => {
+      if (!isMounted) {
+        return;
+      }
+      const nextSession = getSession();
+      setSessionState(nextSession);
+      if (!nextSession) {
+        router.replace("/login");
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [router]);
+
+  const workspaceLink = session ? roleToDashboardPath(session.effectiveRole) : "/dashboard";
+
+  const navLinks = useMemo(() => {
+    if (!session) {
+      return [] as Array<{ href: string; label: string }>;
+    }
+
+    const links = [
+      { href: "/dashboard", label: "Home" },
+      { href: workspaceLink, label: "Workspace" },
+    ];
+
+    if (session.baseRole === "MANAGER" && workspaceLink !== "/dashboard/manager") {
+      links.push({ href: "/dashboard/manager", label: "Manager" });
+    }
+
+    return links;
+  }, [session, workspaceLink]);
+
+  const handleLogout = async () => {
+    try {
+      setSigningOut(true);
+      await AuthApi.logout();
+    } catch {
+      // Force clear local session even if server-side logout fails.
+    } finally {
+      clearSession();
+      router.replace("/login");
+      setSigningOut(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen grid place-items-center text-white bg-[radial-gradient(circle_at_20%_20%,rgba(34,197,94,0.15),transparent_35%),linear-gradient(135deg,#050608,#040404)]">
+        <p className="text-sm tracking-[0.2em] uppercase text-white/70">Loading workspace...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen text-white relative font-sans w-full bg-[radial-gradient(circle_at_10%_10%,rgba(34,197,94,0.16),transparent_35%),radial-gradient(circle_at_95%_5%,rgba(6,182,212,0.14),transparent_30%),linear-gradient(140deg,#06090b,#040404)]">
       <div className="relative z-10 min-h-screen flex flex-col">
-        <header className="px-8 py-5 border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <h1 className="text-xl font-light tracking-widest text-white/70 uppercase">
-              <span className="text-cyan-400 font-bold drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">Restaurant</span>
-            </h1>
-            <Link 
-              href="/"
-              className="px-5 py-2 text-xs font-semibold tracking-wider text-white/50 hover:text-cyan-300 hover:bg-cyan-900/20 transition-all border border-transparent hover:border-cyan-400/30 rounded-full"
-            >
-              TERMINATE SESSION
-            </Link>
+        <header className="px-5 md:px-8 py-4 border-b border-white/10 bg-black/30 backdrop-blur-xl sticky top-0 z-50">
+          <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between max-w-7xl mx-auto">
+            <div>
+              <h1 className="text-lg sm:text-xl tracking-[0.2em] uppercase text-emerald-300">Restaurant OMS</h1>
+              {session && (
+                <p className="text-xs text-white/60 mt-1">
+                  Signed in as <span className="text-white">{session.username}</span> • Effective role <span className="text-emerald-300">{session.effectiveRole}</span>
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 md:gap-3">
+              {navLinks.map((link) => {
+                const active = pathname.startsWith(link.href) && (link.href !== "/dashboard" || pathname === "/dashboard");
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`px-3 py-1.5 rounded-full text-xs uppercase tracking-widest border transition ${
+                      active
+                        ? "border-emerald-400/70 bg-emerald-500/20 text-emerald-200"
+                        : "border-white/15 text-white/70 hover:text-white hover:border-white/40"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+
+              <button
+                onClick={handleLogout}
+                disabled={signingOut}
+                className="px-3 py-1.5 rounded-full text-xs uppercase tracking-widest border border-rose-300/40 text-rose-200 hover:bg-rose-500/20 transition disabled:opacity-50"
+              >
+                {signingOut ? "Signing out..." : "Sign out"}
+              </button>
+            </div>
           </div>
         </header>
 
-        <motion.main 
-          initial={{ y: "-100vh", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", damping: 25, stiffness: 120, duration: 0.8 }}
-          className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full"
-        >
+        <main className="flex-1 p-5 md:p-8 max-w-7xl mx-auto w-full">
           {children}
-        </motion.main>
+        </main>
       </div>
     </div>
   );
